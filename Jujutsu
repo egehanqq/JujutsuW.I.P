@@ -1,0 +1,83 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "AimlockUI"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+local Frame = Instance.new("Frame")
+Frame.Size = UDim2.new(0, 140, 0, 65)
+Frame.Position = UDim2.new(0, 20, 0, 20)
+Frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+Frame.BackgroundTransparency = 0.1
+Frame.Parent = ScreenGui
+Instance.new("UICorner", Frame)
+
+local Button = Instance.new("TextButton")
+Button.Size = UDim2.new(1, 0, 0, 40)
+Button.Position = UDim2.new(0, 0, 0, 0)
+Button.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+Button.Text = "Aimlock: OFF"
+Button.Font = Enum.Font.GothamBold
+Button.TextColor3 = Color3.fromRGB(255, 255, 255)
+Button.TextSize = 18
+Button.Parent = Frame
+Instance.new("UICorner", Button)
+
+local Label = Instance.new("TextLabel")
+Label.Size = UDim2.new(1, 0, 0, 20)
+Label.Position = UDim2.new(0, 0, 0, 45)
+Label.BackgroundTransparency = 1
+Label.Text = "Made by egehanwsa"
+Label.Font = Enum.Font.Gotham
+Label.TextColor3 = Color3.fromRGB(170, 170, 170)
+Label.TextSize = 14
+Label.Parent = Frame
+
+local Locked = false
+local Target = nil
+
+local function GetClosestTarget()
+	local closest, shortest = nil, math.huge
+	for _, player in ipairs(Players:GetPlayers()) do
+		if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+			local dist = (player.Character.HumanoidRootPart.Position - LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
+			if dist < shortest and dist < 100 then
+				shortest = dist
+				closest = player
+			end
+		end
+	end
+	return closest
+end
+
+Button.MouseButton1Click:Connect(function()
+	if Locked then
+		Locked = false
+		Target = nil
+		Button.Text = "Aimlock: OFF"
+		Button.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+	else
+		Target = GetClosestTarget()
+		if Target then
+			Locked = true
+			Button.Text = "Aimlock: ON"
+			Button.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+		end
+	end
+end)
+
+RunService.RenderStepped:Connect(function()
+	if Locked and Target and Target.Character and Target.Character:FindFirstChild("HumanoidRootPart") then
+		local myChar = LocalPlayer.Character
+		if myChar and myChar:FindFirstChild("HumanoidRootPart") then
+			local myPos = myChar.HumanoidRootPart.Position
+			local targetPos = Target.Character.HumanoidRootPart.Position
+			local flatTarget = Vector3.new(targetPos.X, myPos.Y, targetPos.Z)
+			myChar.HumanoidRootPart.CFrame = CFrame.new(myPos, flatTarget)
+		end
+	end
+end)
